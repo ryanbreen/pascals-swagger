@@ -2,14 +2,14 @@
 #
 # EOF (end-of-file) token is used to indicate that
 # there is no more input left for lexical analysis
-INTEGER, PLUS, SPACE, EOF = 'INTEGER', 'PLUS', 'SPACE', 'EOF'
+INTEGER, PLUS, MINUS, SPACE, EOF = 'INTEGER', 'PLUS', 'MINUS', 'SPACE', 'EOF'
 
 
 class Token(object):
     def __init__(self, type, value):
         # token type: INTEGER, PLUS, or EOF
         self.type = type
-        # token value: 0, 1, 2. 3, 4, 5, 6, 7, 8, 9, '+', ' ', or None
+        # token value: 0, 1, 2. 3, 4, 5, 6, 7, 8, 9, '+', ' ', '-', or None
         self.value = value
 
     def __str__(self):
@@ -72,6 +72,11 @@ class Interpreter(object):
             self.pos += 1
             return token
 
+        if current_char == '-':
+            token = Token(MINUS, current_char)
+            self.pos += 1
+            return token
+
         if current_char == ' ':
             token = Token(SPACE, current_char)
             self.pos += 1
@@ -91,7 +96,7 @@ class Interpreter(object):
 
     def skip_whitespace(self):
         while self.current_token.type == SPACE:
-            self.current_token = self.get_next_token()
+            self.eat(SPACE)
 
     def collect_digits(self):
         scale = 0
@@ -103,7 +108,7 @@ class Interpreter(object):
         return val
 
     def expr(self):
-        """expr -> INTEGER SPACE? PLUS SPACE? INTEGER"""
+        """expr -> INTEGER+ SPACE? PLUS|MINUS SPACE? INTEGER+"""
         # set current token to the first token taken from the input
         self.current_token = self.get_next_token()
 
@@ -111,28 +116,24 @@ class Interpreter(object):
 
         left = self.collect_digits()
 
-        print left
-
         self.skip_whitespace()
 
-        # we expect the current token to be a '+' token
+        # we expect the current token to be a '+' or '-' token
         op = self.current_token
-        self.eat(PLUS)
+        if op.type == PLUS:
+            self.eat(PLUS)
+        else:
+            self.eat(MINUS)
 
         self.skip_whitespace()
-
-        # after the above call the self.current_token is set to
-        # EOF token
 
         right = self.collect_digits()
-
-        print right
 
         # at this point INTEGER PLUS INTEGER sequence of tokens
         # has been successfully found and the method can just
         # return the result of adding two integers, thus
         # effectively interpreting client input
-        result = left + right
+        result = left + right if op.type == PLUS else left - right
         return result
 
 
