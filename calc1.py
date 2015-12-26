@@ -89,40 +89,50 @@ class Interpreter(object):
         else:
             self.error()
 
+    def skip_whitespace(self):
+        while self.current_token.type == SPACE:
+            self.current_token = self.get_next_token()
+
+    def collect_digits(self):
+        scale = 0
+        val = 0
+        while self.current_token.type == INTEGER:
+            val = val * 10 * scale + self.current_token.value
+            scale += 1
+            self.eat(INTEGER)
+        return val
+
     def expr(self):
         """expr -> INTEGER SPACE? PLUS SPACE? INTEGER"""
         # set current token to the first token taken from the input
         self.current_token = self.get_next_token()
 
-        # we expect the current token to be a single-digit integer
-        left = self.current_token
-        self.eat(INTEGER)
+        self.skip_whitespace()
 
-        sp = self.current_token
-        while sp.type == SPACE:
-            self.eat(SPACE)
-            sp = self.current_token
+        left = self.collect_digits()
+
+        print left
+
+        self.skip_whitespace()
 
         # we expect the current token to be a '+' token
         op = self.current_token
         self.eat(PLUS)
 
-        sp = self.current_token
-        while sp.type == SPACE:
-            self.eat(SPACE)
-            sp = self.current_token
+        self.skip_whitespace()
 
-        # we expect the current token to be a single-digit integer
-        right = self.current_token
-        self.eat(INTEGER)
         # after the above call the self.current_token is set to
         # EOF token
+
+        right = self.collect_digits()
+
+        print right
 
         # at this point INTEGER PLUS INTEGER sequence of tokens
         # has been successfully found and the method can just
         # return the result of adding two integers, thus
         # effectively interpreting client input
-        result = left.value + right.value
+        result = left + right
         return result
 
 
