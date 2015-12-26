@@ -99,16 +99,18 @@ class Interpreter(object):
         self.eat(INTEGER)
 
         sp = self.current_token
-        if sp.type == SPACE:
+        while sp.type == SPACE:
             self.eat(SPACE)
+            sp = self.current_token
 
         # we expect the current token to be a '+' token
         op = self.current_token
         self.eat(PLUS)
 
         sp = self.current_token
-        if sp.type == SPACE:
+        while sp.type == SPACE:
             self.eat(SPACE)
+            sp = self.current_token
 
         # we expect the current token to be a single-digit integer
         right = self.current_token
