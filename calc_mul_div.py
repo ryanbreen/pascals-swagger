@@ -7,9 +7,9 @@ INTEGER, OPERATOR, EOF = 'INTEGER', 'OPERATOR', 'EOF'
 
 class Token(object):
     def __init__(self, type, value):
-        # token type: INTEGER, PLUS, or EOF
+        # token type: INTEGER, MUL, DIV, or EOF
         self.type = type
-        # token value: 0, 1, 2. 3, 4, 5, 6, 7, 8, 9, '+', '-', '*', '%', ' ', or None
+        # token value: 0, 1, 2. 3, 4, 5, 6, 7, 8, 9, '*', '/', ' ', or None
         self.value = value
 
     def __str__(self):
@@ -30,7 +30,7 @@ class Token(object):
 
 class Interpreter(object):
     def __init__(self, text):
-        # client string input, e.g. "3+5"
+        # client string input, e.g. "3*5/5"
         self.text = text
         # self.pos is an index into self.text
         self.pos = 0
@@ -71,7 +71,7 @@ class Interpreter(object):
             self.pos += 1
             return token
 
-        if current_char == '+' or current_char == '-' or current_char == '*' or current_char == '%':
+        if current_char == '*' or current_char == '/':
             token = Token(OPERATOR, current_char)
             self.pos += 1
             return token
@@ -101,7 +101,7 @@ class Interpreter(object):
         return val
 
     def expr(self):
-        """expr -> INTEGER+ SPACE? PLUS|MINUS SPACE? INTEGER+"""
+        """expr -> INTEGER+ SPACE? DIVIDE|MULTIPLY SPACE? INTEGER+"""
         # set current token to the first token taken from the input
         self.current_token = self.get_next_token()
 
@@ -114,12 +114,8 @@ class Interpreter(object):
 
             right = self.collect_digits()
 
-            if op.value == '+':
-                value = value + right
-            elif op.value == '-':
-                value = value - right
-            elif op.value == '%':
-                value = value % right
+            if op.value == '/':
+                value = value / right
             elif op.value == '*':
                 value = value * right
 
