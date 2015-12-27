@@ -91,6 +91,9 @@ class Interpreter(object):
     def collect_digits(self):
         scale = 0
         val = 0
+        if self.current_token.type != INTEGER:
+            self.error()
+
         while self.current_token.type == INTEGER:
             val = val * 10 * scale + self.current_token.value
             scale += 1
@@ -102,29 +105,27 @@ class Interpreter(object):
         # set current token to the first token taken from the input
         self.current_token = self.get_next_token()
 
-        left = self.collect_digits()
+        value = self.collect_digits()
 
         # we expect the current token to be a '+' or '-' token
         op = self.current_token
-        if op.type == OPERATOR:
+        while op.type == OPERATOR:
             self.eat(OPERATOR)
 
-        right = self.collect_digits()
+            right = self.collect_digits()
 
-        # at this point INTEGER PLUS INTEGER sequence of tokens
-        # has been successfully found and the method can just
-        # return the result of adding two integers, thus
-        # effectively interpreting client input
-        if op.value == '+':
-            return left + right
-        elif op.value == '-':
-            return left - right
-        elif op.value == '%':
-            return left % right
-        elif op.value == '*':
-            return left * right
+            if op.value == '+':
+                value = value + right
+            elif op.value == '-':
+                value = value - right
+            elif op.value == '%':
+                value = value % right
+            elif op.value == '*':
+                value = value * right
 
-        self.error()
+            op = self.current_token
+
+        return value
 
 def main():
     while True:
