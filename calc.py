@@ -136,10 +136,10 @@ class Interpreter(object):
 
         right = self.factor()
 
-        if token.value == '/':
-          result = result / right
-        elif token.value == '*':
-          result = result * right
+        if token.value == '+':
+          result = result + right
+        elif token.value == '-':
+          result = result - right
 
       return result
 
@@ -155,7 +155,7 @@ def main():
         continue
     lexer = Lexer(text)
     interpreter = Interpreter(lexer)
-    result = interpreter.expr()
+    result = interpreter.add_sub()
     print(result)
 
 if __name__ == '__main__':
