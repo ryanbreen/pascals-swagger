@@ -76,7 +76,7 @@ class Lexer(object):
         token = Token(INTEGER, int(digits))
         return token
 
-      if current_char == '*' or current_char == '/':
+      if current_char == '*' or current_char == '/' or current_char == '+' or current_char == '-':
         token = Token(OPERATOR, current_char)
         self.pos += 1
         return token
@@ -109,7 +109,24 @@ class Interpreter(object):
       self.eat(INTEGER)
       return token.value
 
-    def expr(self):
+    def mul_div(self):
+      """expr -> INTEGER+ SPACE? DIVIDE|MULTIPLY SPACE? INTEGER+"""
+      result = self.factor()
+
+      while self.lexer.current_token.type == OPERATOR:
+        token = self.lexer.current_token
+        self.eat(OPERATOR)
+
+        right = self.factor()
+
+        if token.value == '/':
+          result = result / right
+        elif token.value == '*':
+          result = result * right
+
+      return result
+
+    def add_sub(self):
       """expr -> INTEGER+ SPACE? DIVIDE|MULTIPLY SPACE? INTEGER+"""
       result = self.factor()
 
