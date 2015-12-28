@@ -35,7 +35,7 @@ class Interpreter(object):
         # self.pos is an index into self.text
         self.pos = 0
         # current token instance
-        self.current_token = None
+        self.current_token = self.get_next_token()
 
     def error(self):
         raise Exception('Error parsing input')
@@ -52,91 +52,83 @@ class Interpreter(object):
         # if so, then return EOF token because there is no more
         # input left to convert into tokens
         if self.pos > len(text) - 1:
-            return Token(EOF, None)
+          return Token(EOF, None)
 
         # get a character at the position self.pos and decide
         # what token to create based on the single character
         current_char = text[self.pos]
 
         if current_char.isspace():
-            self.pos += 1
-            return self.get_next_token()
+          self.pos += 1
+          return self.get_next_token()
 
         # if the character is a digit then convert it to
         # integer, create an INTEGER token, increment self.pos
         # index to point to the next character after the digit,
         # and return the INTEGER token
         if current_char.isdigit():
-            token = Token(INTEGER, int(current_char))
+          digits = current_char
+          while len(text) > self.pos+1 and text[self.pos+1].isdigit():
             self.pos += 1
-            return token
+            current_char = text[self.pos]
+            digits += current_char
+          
+          self.pos += 1
+          token = Token(INTEGER, int(digits))
+          return token
 
         if current_char == '*' or current_char == '/':
-            token = Token(OPERATOR, current_char)
-            self.pos += 1
-            return token
+          token = Token(OPERATOR, current_char)
+          self.pos += 1
+          return token
 
         self.error()
 
     def eat(self, token_type):
-        # compare the current token type with the passed token
-        # type and if they match then "eat" the current token
-        # and assign the next token to the self.current_token,
-        # otherwise raise an exception.
-        if self.current_token.type == token_type:
-            self.current_token = self.get_next_token()
-        else:
-            self.error()
+      # compare the current token type with the passed token
+      # type and if they match then "eat" the current token
+      # and assign the next token to the self.current_token,
+      # otherwise raise an exception.
+      if self.current_token.type == token_type:
+        self.current_token = self.get_next_token()
+      else:
+        self.error()
 
-    def collect_digits(self):
-        scale = 0
-        val = 0
-        if self.current_token.type != INTEGER:
-            self.error()
-
-        while self.current_token.type == INTEGER:
-            val = val * 10 * scale + self.current_token.value
-            scale += 1
-            self.eat(INTEGER)
-        return val
+    def factor(self):
+      token = self.current_token
+      self.eat(INTEGER)
+      return token.value
 
     def expr(self):
-        """expr -> INTEGER+ SPACE? DIVIDE|MULTIPLY SPACE? INTEGER+"""
-        # set current token to the first token taken from the input
-        self.current_token = self.get_next_token()
+      """expr -> INTEGER+ SPACE? DIVIDE|MULTIPLY SPACE? INTEGER+"""
+      result = self.factor()
 
-        value = self.collect_digits()
+      while self.current_token.type == OPERATOR:
+        token = self.current_token
+        self.eat(OPERATOR)
 
-        # we expect the current token to be a '+' or '-' token
-        op = self.current_token
-        while op.type == OPERATOR:
-            self.eat(OPERATOR)
+        right = self.factor()
 
-            right = self.collect_digits()
+        if token.value == '/':
+          result = result / right
+        elif token.value == '*':
+          result = result * right
 
-            if op.value == '/':
-                value = value / right
-            elif op.value == '*':
-                value = value * right
-
-            op = self.current_token
-
-        return value
+      return result
 
 def main():
-    while True:
-        try:
-            # To run under Python3 replace 'raw_input' call
-            # with 'input'
-            text = raw_input('calc> ')
-        except EOFError:
-            break
-        if not text:
-            continue
-        interpreter = Interpreter(text)
-        result = interpreter.expr()
-        print(result)
-
+  while True:
+    try:
+        # To run under Python3 replace 'raw_input' call
+        # with 'input'
+        text = raw_input('calc> ')
+    except EOFError:
+        break
+    if not text:
+        continue
+    interpreter = Interpreter(text)
+    result = interpreter.expr()
+    print(result)
 
 if __name__ == '__main__':
     main()
