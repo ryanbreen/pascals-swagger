@@ -109,11 +109,11 @@ class Interpreter(object):
       self.eat(INTEGER)
       return token.value
 
-    def mul_div(self):
+    def term(self, result = 1):
       """expr -> INTEGER+ SPACE? DIVIDE|MULTIPLY SPACE? INTEGER+"""
       result = self.factor()
 
-      while self.lexer.current_token.type == OPERATOR:
+      while self.lexer.current_token.value in ('/', '*'):
         token = self.lexer.current_token
         self.eat(OPERATOR)
 
@@ -128,13 +128,14 @@ class Interpreter(object):
 
     def add_sub(self):
       """expr -> INTEGER+ SPACE? DIVIDE|MULTIPLY SPACE? INTEGER+"""
-      result = self.factor()
+      result = self.term()
 
-      while self.lexer.current_token.type == OPERATOR:
+      while self.lexer.current_token.value in ('+', '-'):
         token = self.lexer.current_token
+
         self.eat(OPERATOR)
 
-        right = self.factor()
+        right = self.term()
 
         if token.value == '+':
           result = result + right
