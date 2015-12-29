@@ -2,8 +2,7 @@
 #
 # EOF (end-of-file) token is used to indicate that
 # there is no more input left for lexical analysis
-INTEGER, OPERATOR, EOF = 'INTEGER', 'OPERATOR', 'EOF'
-
+INTEGER, ADD, SUB, MUL, DIV, EOF = 'INTEGER', 'ADD', 'SUB', 'MUL', 'DIV', 'EOF'
 
 class Token(object):
     def __init__(self, type, value):
@@ -76,9 +75,21 @@ class Lexer(object):
         token = Token(INTEGER, int(digits))
         return token
 
-      if current_char == '*' or current_char == '/' or current_char == '+' or current_char == '-':
-        token = Token(OPERATOR, current_char)
-        self.pos += 1
+      if current_char == '*':
+        token = Token(MUL, current_char)
+        self.pos +=1
+        return token
+      if current_char == '/':
+        token = Token(DIV, current_char)
+        self.pos +=1
+        return token
+      if current_char == '+':
+        token = Token(ADD, current_char)
+        self.pos +=1
+        return token
+      if current_char == '-':
+        token = Token(SUB, current_char)
+        self.pos +=1
         return token
 
       self.error()
@@ -113,33 +124,33 @@ class Interpreter(object):
       """expr -> INTEGER+ SPACE? DIVIDE|MULTIPLY SPACE? INTEGER+"""
       result = self.factor()
 
-      while self.lexer.current_token.value in ('/', '*'):
+      while self.lexer.current_token.type in (MUL, DIV):
         token = self.lexer.current_token
-        self.eat(OPERATOR)
 
-        right = self.factor()
-
-        if token.value == '/':
+        if token.type == DIV:
+          self.eat(DIV)
+          right = self.factor()
           result = result / right
-        elif token.value == '*':
+        elif token.type == MUL:
+          self.eat(MUL)
+          right = self.factor()
           result = result * right
 
       return result
 
-    def add_sub(self):
+    def expr(self):
       """expr -> INTEGER+ SPACE? DIVIDE|MULTIPLY SPACE? INTEGER+"""
       result = self.term()
 
-      while self.lexer.current_token.value in ('+', '-'):
+      while self.lexer.current_token.type in (ADD, SUB):
         token = self.lexer.current_token
-
-        self.eat(OPERATOR)
-
-        right = self.term()
-
-        if token.value == '+':
+        if token.type == ADD:
+          self.eat(ADD)
+          right = self.term()
           result = result + right
-        elif token.value == '-':
+        elif token.type == SUB:
+          self.eat(SUB)
+          right = self.term()
           result = result - right
 
       return result
@@ -156,7 +167,7 @@ def main():
         continue
     lexer = Lexer(text)
     interpreter = Interpreter(lexer)
-    result = interpreter.add_sub()
+    result = interpreter.expr()
     print(result)
 
 if __name__ == '__main__':
