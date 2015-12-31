@@ -2,7 +2,7 @@
 #
 # EOF (end-of-file) token is used to indicate that
 # there is no more input left for lexical analysis
-INTEGER, ADD, SUB, MUL, DIV, EOF = 'INTEGER', 'ADD', 'SUB', 'MUL', 'DIV', 'EOF'
+INTEGER, ADD, SUB, MUL, DIV, OPEN_PAREN, CLOSE_PAREN, EOF = 'INTEGER', 'ADD', 'SUB', 'MUL', 'DIV', 'OPEN_PAREN', 'CLOSE_PAREN', 'EOF'
 
 class Token(object):
     def __init__(self, type, value):
@@ -92,6 +92,16 @@ class Lexer(object):
         self.pos +=1
         return token
 
+      if current_char == '('
+        token = Token(OPEN_PAREN, current_char)
+        self.pos += 1
+        return token
+
+      if current_char == ')'
+        token = Token(CLOSE_PAREN, current_char)
+        self.pos += 1
+        return token
+
       self.error()
 
 
@@ -117,8 +127,17 @@ class Interpreter(object):
 
     def factor(self):
       token = self.lexer.current_token
+
+      if (token.type == OPEN_PAREN) return self.paren()
+
       self.eat(INTEGER)
       return token.value
+
+    def paren(self):
+      self.eat(OPEN_PAREN)
+      rvalue = self.expr()
+      self.eat(CLOSE_PAREN)
+      return rvalue
 
     def term(self, result = 1):
       """expr -> INTEGER+ SPACE? DIVIDE|MULTIPLY SPACE? INTEGER+"""
