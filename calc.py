@@ -92,12 +92,12 @@ class Lexer(object):
         self.pos +=1
         return token
 
-      if current_char == '('
+      if current_char == '(':
         token = Token(OPEN_PAREN, current_char)
         self.pos += 1
         return token
 
-      if current_char == ')'
+      if current_char == ')':
         token = Token(CLOSE_PAREN, current_char)
         self.pos += 1
         return token
@@ -128,7 +128,8 @@ class Interpreter(object):
     def factor(self):
       token = self.lexer.current_token
 
-      if (token.type == OPEN_PAREN) return self.paren()
+      if (token.type == OPEN_PAREN):
+        return self.paren()
 
       self.eat(INTEGER)
       return token.value
