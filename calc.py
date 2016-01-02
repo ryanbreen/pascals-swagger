@@ -2,7 +2,7 @@
 #
 # EOF (end-of-file) token is used to indicate that
 # there is no more input left for lexical analysis
-INTEGER, ADD, SUB, MUL, DIV, OPEN_PAREN, CLOSE_PAREN, EOF = 'INTEGER', 'ADD', 'SUB', 'MUL', 'DIV', 'OPEN_PAREN', 'CLOSE_PAREN', 'EOF'
+INTEGER, OPERATOR, OPEN_PAREN, CLOSE_PAREN, EOF = 'INTEGER', 'OPERATOR', 'OPEN_PAREN', 'CLOSE_PAREN', 'EOF'
 
 class Token(object):
     def __init__(self, type, value):
@@ -25,6 +25,20 @@ class Token(object):
 
     def __repr__(self):
         return self.__str__()
+
+class AST(object):
+  pass
+
+class BinOp(AST):
+  def __init__(self, left, op, right):
+    self.left = left
+    self.token = self.op = op
+    self.right = right
+
+class Num(AST):
+  def __init__(self, token):
+    self.token = token
+    self.value = token.value
 
 class Lexer(object):
   def __init__(self, text):
@@ -75,20 +89,8 @@ class Lexer(object):
         token = Token(INTEGER, int(digits))
         return token
 
-      if current_char == '*':
-        token = Token(MUL, current_char)
-        self.pos +=1
-        return token
-      if current_char == '/':
-        token = Token(DIV, current_char)
-        self.pos +=1
-        return token
-      if current_char == '+':
-        token = Token(ADD, current_char)
-        self.pos +=1
-        return token
-      if current_char == '-':
-        token = Token(SUB, current_char)
+      if current_char in ('*', '/', '-', '+'):
+        token = Token(OPERATOR, current_char)
         self.pos +=1
         return token
 
@@ -104,76 +106,66 @@ class Lexer(object):
 
       self.error()
 
+class Parser(object):
 
-class Interpreter(object):
+  def __init__(self, lexer):
+    self.lexer = lexer
+    # set current token to the first token taken from the input
+    self.current_token = self.lexer.current_token
 
-    def __init__(self, lexer):
-      self.lexer = lexer
-      # set current token to the first token taken from the input
-      self.current_token = self.lexer.current_token
+  def error(self):
+    raise Exception('Invalid syntax')
 
-    def error(self):
-      raise Exception('Invalid syntax')
+  def eat(self, token_type):
+    # compare the current token type with the passed token
+    # type and if they match then "eat" the current token
+    # and assign the next token to the self.current_token,
+    # otherwise raise an exception.
+    if self.lexer.current_token.type == token_type:
+      self.lexer.current_token = self.lexer.get_next_token()
+    else:
+      self.error()
 
-    def eat(self, token_type):
-      # compare the current token type with the passed token
-      # type and if they match then "eat" the current token
-      # and assign the next token to the self.current_token,
-      # otherwise raise an exception.
-      if self.lexer.current_token.type == token_type:
-        self.lexer.current_token = self.lexer.get_next_token()
-      else:
-        self.error()
+  def factor(self):
+    token = self.lexer.current_token
 
-    def factor(self):
+    if (token.type == OPEN_PAREN):
+      return self.paren()
+
+    self.eat(INTEGER)
+    return Num(token)
+
+  def paren(self):
+    self.eat(OPEN_PAREN)
+    rvalue = self.expr()
+    self.eat(CLOSE_PAREN)
+    return rvalue
+
+  def term(self, result = 1):
+    """expr -> INTEGER+ SPACE? DIVIDE|MULTIPLY SPACE? INTEGER+"""
+    left = self.factor()
+
+    while self.lexer.current_token.value in ('/', '*'):
       token = self.lexer.current_token
 
-      if (token.type == OPEN_PAREN):
-        return self.paren()
+      self.eat(OPERATOR)
+      right = self.factor()
+      left = BinOp(left, token, right)
 
-      self.eat(INTEGER)
-      return token.value
+    return left
 
-    def paren(self):
-      self.eat(OPEN_PAREN)
-      rvalue = self.expr()
-      self.eat(CLOSE_PAREN)
-      return rvalue
+  def expr(self):
+    """expr -> INTEGER+ SPACE? DIVIDE|MULTIPLY SPACE? INTEGER+"""
+    left = self.term()
 
-    def term(self, result = 1):
-      """expr -> INTEGER+ SPACE? DIVIDE|MULTIPLY SPACE? INTEGER+"""
-      result = self.factor()
+    while self.lexer.current_token.value in ('+', '-'):
+      token = self.lexer.current_token
 
-      while self.lexer.current_token.type in (MUL, DIV):
-        token = self.lexer.current_token
+      self.eat(OPERATOR)
+      right = self.term()
+      left = BinOp(left, token, right)
 
-        if token.type == DIV:
-          self.eat(DIV)
-          right = self.factor()
-          result = result / right
-        elif token.type == MUL:
-          self.eat(MUL)
-          right = self.factor()
-          result = result * right
-
-      return result
-
-    def expr(self):
-      """expr -> INTEGER+ SPACE? DIVIDE|MULTIPLY SPACE? INTEGER+"""
-      result = self.term()
-
-      while self.lexer.current_token.type in (ADD, SUB):
-        token = self.lexer.current_token
-        if token.type == ADD:
-          self.eat(ADD)
-          right = self.term()
-          result = result + right
-        elif token.type == SUB:
-          self.eat(SUB)
-          right = self.term()
-          result = result - right
-
-      return result
+    return left
 
 def main():
   while True:
@@ -186,8 +178,8 @@ def main():
     if not text:
         continue
     lexer = Lexer(text)
-    interpreter = Interpreter(lexer)
-    result = interpreter.expr()
+    parser = Parser(lexer)
+    result = parser.expr()
     print(result)
 
 if __name__ == '__main__':
