@@ -167,6 +167,18 @@ class Parser(object):
 
     return left
 
+def visit(node):
+  if type(node) is Num:
+    return node.value
+
+  left_val = visit(node.left)
+  right_val = visit(node.right)
+
+  if (node.op.value == '-'): return left_val - right_val
+  elif (node.op.value == '+'): return left_val + right_val
+  elif (node.op.value == '/'): return left_val / right_val
+  elif (node.op.value == '*'): return left_val * right_val
+
 def main():
   while True:
     try:
@@ -179,8 +191,9 @@ def main():
         continue
     lexer = Lexer(text)
     parser = Parser(lexer)
-    result = parser.expr()
-    print(result)
+    root = parser.expr()
+    print visit(root)
+
 
 if __name__ == '__main__':
     main()
