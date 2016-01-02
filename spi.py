@@ -166,33 +166,57 @@ class Parser(object):
       left = BinOp(left, token, right)
 
     return left
+    
+  def parse(self):
+    return self.expr()
 
-def visit(node):
-  if type(node) is Num:
-    return node.value
+class NodeVisitor(object):
+  def visit(self, node):
+    method_name = 'visit_' + type(node).__name__
+    visitor = getattr(self, method_name, self.generic_visit)
+    return visitor(node)
 
-  left_val = visit(node.left)
-  right_val = visit(node.right)
+  def generic_visit(self, node):
+    raise Exception('No visit_{} method'.format(type(node).__name__))
 
-  if (node.op.value == '-'): return left_val - right_val
-  elif (node.op.value == '+'): return left_val + right_val
-  elif (node.op.value == '/'): return left_val / right_val
-  elif (node.op.value == '*'): return left_val * right_val
+class Interpreter(NodeVisitor):
+  def __init__(self, parser):
+    self.parser = parser
+
+  def visit_BinOp(self, node):
+    if node.op.value == '+':
+        return self.visit(node.left) + self.visit(node.right)
+    elif node.op.value == '-':
+        return self.visit(node.left) - self.visit(node.right)
+    elif node.op.value == '*':
+        return self.visit(node.left) * self.visit(node.right)
+    elif node.op.value == '/':
+        return self.visit(node.left) / self.visit(node.right)
+
+  def visit_Num(self, node):
+      return node.value
+
+  def interpret(self):
+    tree = self.parser.parse()
+    return self.visit(tree)
 
 def main():
   while True:
     try:
-        # To run under Python3 replace 'raw_input' call
-        # with 'input'
-        text = raw_input('calc> ')
+      try:
+        text = raw_input('spi> ')
+      except NameError:  # Python3
+        text = input('spi> ')
     except EOFError:
-        break
+      break
     if not text:
-        continue
+      continue
+
     lexer = Lexer(text)
     parser = Parser(lexer)
-    root = parser.expr()
-    print visit(root)
+    interpreter = Interpreter(parser)
+    result = interpreter.interpret()
+    print(result)
 
 
 if __name__ == '__main__':
