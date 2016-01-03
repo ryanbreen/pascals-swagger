@@ -213,6 +213,19 @@ class PolishPrinter(NodeVisitor):
   def stringify(self):
     return self.visit(self.root)
 
+class LispPrinter(NodeVisitor):
+  def __init__(self, tree):
+    self.root = tree
+
+  def visit_BinOp(self, node):
+    return "(" + node.op.value + " " + self.visit(node.left) + " " + self.visit(node.right) + ")"
+
+  def visit_Num(self, node):
+      return str(node.value)
+
+  def stringify(self):
+    return self.visit(self.root)
+
 def main():
   while True:
     try:
@@ -232,8 +245,8 @@ def main():
     #print(result)
 
     node = parser.parse()
-    pprinter = PolishPrinter(node)
-    print(pprinter.stringify())
+    printer = LispPrinter(node)
+    print(printer.stringify())
 
 
 if __name__ == '__main__':
