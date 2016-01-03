@@ -200,6 +200,19 @@ class Interpreter(NodeVisitor):
     tree = self.parser.parse()
     return self.visit(tree)
 
+class PolishPrinter(NodeVisitor):
+  def __init__(self, tree):
+    self.root = tree
+
+  def visit_BinOp(self, node):
+    return self.visit(node.left) + " " + self.visit(node.right) + " " + node.op.value
+
+  def visit_Num(self, node):
+      return str(node.value)
+
+  def stringify(self):
+    return self.visit(self.root)
+
 def main():
   while True:
     try:
@@ -215,8 +228,12 @@ def main():
     lexer = Lexer(text)
     parser = Parser(lexer)
     interpreter = Interpreter(parser)
-    result = interpreter.interpret()
-    print(result)
+    #result = interpreter.interpret()
+    #print(result)
+
+    node = parser.parse()
+    pprinter = PolishPrinter(node)
+    print(pprinter.stringify())
 
 
 if __name__ == '__main__':
