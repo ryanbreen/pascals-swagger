@@ -2,13 +2,13 @@
 #
 # EOF (end-of-file) token is used to indicate that
 # there is no more input left for lexical analysis
-INTEGER, OPERATOR, OPEN_PAREN, CLOSE_PAREN, EOF = 'INTEGER', 'OPERATOR', 'OPEN_PAREN', 'CLOSE_PAREN', 'EOF'
+INTEGER, ASSIGNMENT, OPERATOR, OPEN_PAREN, CLOSE_PAREN, EOF = 'INTEGER', 'ASSIGNMENT', 'OPERATOR', 'OPEN_PAREN', 'CLOSE_PAREN', 'EOF'
 
 class Token(object):
     def __init__(self, type, value):
-        # token type: INTEGER, MUL, DIV, or EOF
+        # token type: INTEGER, OPERATOR, etc
         self.type = type
-        # token value: 0, 1, 2. 3, 4, 5, 6, 7, 8, 9, '*', '/', ' ', or None
+        # token value: 0, 1, 2. 3, 4, 5, 6, 7, 8, 9, '=', *', '/', ' ', or None
         self.value = value
 
     def __str__(self):
@@ -28,6 +28,11 @@ class Token(object):
 
 class AST(object):
   pass
+
+class SetOp(AST):
+  def __init__(self, name, value):
+    self.name = left
+    self.value = value
 
 class BinOp(AST):
   def __init__(self, left, op, right):
@@ -91,6 +96,11 @@ class Lexer(object):
 
       if current_char in ('*', '/', '-', '+'):
         token = Token(OPERATOR, current_char)
+        self.pos +=1
+        return token
+
+      if current_char == '=':
+        token = Token(ASSIGNMENT, current_char)
         self.pos +=1
         return token
 
