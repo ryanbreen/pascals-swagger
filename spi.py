@@ -125,8 +125,6 @@ class Parser(object):
 
   def __init__(self, lexer):
     self.lexer = lexer
-    # set current token to the first token taken from the input
-    self.current_token = self.lexer.current_token
 
   def error(self):
     raise Exception('Invalid syntax')
@@ -142,18 +140,18 @@ class Parser(object):
       self.error()
 
   def factor(self):
-    """factor : (PLUS | MINUS) factor | INTEGER | LPAREN expr RPAREN"""
-    token = self.current_token
+    """factor : (PLUS | MINUS) factor | INTEGER | OPEN_PAREN expr CLOSE_PAREN"""
+    token = self.lexer.current_token
     if token.type == OPERATOR:
       node = UnaryOp(token, self.factor())
       return node
     elif token.type == INTEGER:
       self.eat(INTEGER)
       return Num(token)
-    elif token.type == LPAREN:
-      self.eat(LPAREN)
+    elif token.type == OPEN_PAREN:
+      self.eat(OPEN_PAREN)
       node = self.expr()
-      self.eat(RPAREN)
+      self.eat(CLOSE_PAREN)
       return node
 
   def paren(self):
@@ -235,8 +233,11 @@ class PolishPrinter(NodeVisitor):
   def visit_BinOp(self, node):
     return self.visit(node.left) + " " + self.visit(node.right) + " " + node.op.value
 
+  def visit_UnaryOp(self, node):
+    return self.visit(node.expr) + node.op.value;
+
   def visit_Num(self, node):
-      return str(node.value)
+    return str(node.value)
 
   def stringify(self):
     return self.visit(self.root)
@@ -247,6 +248,9 @@ class LispPrinter(NodeVisitor):
 
   def visit_BinOp(self, node):
     return "(" + node.op.value + " " + self.visit(node.left) + " " + self.visit(node.right) + ")"
+
+  def visit_UnaryOp(self, node):
+    return "(" + node.op.value + " " + self.visit(node.expr) + ")"
 
   def visit_Num(self, node):
       return str(node.value)
