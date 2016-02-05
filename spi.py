@@ -156,15 +156,6 @@ class Parser(object):
       self.eat(RPAREN)
       return node
 
-  def factor(self):
-    token = self.lexer.current_token
-
-    if (token.type == OPEN_PAREN):
-      return self.paren()
-
-    self.eat(INTEGER)
-    return Num(token)
-
   def paren(self):
     self.eat(OPEN_PAREN)
     rvalue = self.expr()
