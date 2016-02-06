@@ -143,6 +143,7 @@ class Parser(object):
     """factor : (PLUS | MINUS) factor | INTEGER | OPEN_PAREN expr CLOSE_PAREN"""
     token = self.lexer.current_token
     if token.type == OPERATOR:
+      self.eat(OPERATOR)
       node = UnaryOp(token, self.factor())
       return node
     elif token.type == INTEGER:
@@ -220,7 +221,7 @@ class Interpreter(NodeVisitor):
       return -self.visit(node.expr)
 
   def visit_Num(self, node):
-      return node.value
+    return node.value
 
   def interpret(self):
     tree = self.parser.parse()
@@ -273,12 +274,12 @@ def main():
     lexer = Lexer(text)
     parser = Parser(lexer)
     interpreter = Interpreter(parser)
-    #result = interpreter.interpret()
-    #print(result)
+    result = interpreter.interpret()
+    print(result)
 
-    node = parser.parse()
-    printer = LispPrinter(node)
-    print(printer.stringify())
+    #node = parser.parse()
+    #printer = LispPrinter(node)
+    #print(printer.stringify())
 
 
 if __name__ == '__main__':
